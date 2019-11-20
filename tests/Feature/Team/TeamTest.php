@@ -1,14 +1,13 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Team;
 
-use App\Http\Resources\Team as TeamResource;
 use App\Team;
 use App\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
+use App\Http\Resources\Team as TeamResource;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TeamTest extends TestCase
 {
@@ -17,14 +16,14 @@ class TeamTest extends TestCase
     /** @test */
     public function can_return_a_collection_of_teams_with_paginated()
     {
-        $team1 = $this->createTeam();
-        $team2 = $this->createTeam();
-        $team3 = $this->createTeam();
+        $this->createTeam();
+        $this->createTeam();
+        $this->createTeam();
 
         $response = $this->actingAs($this->createUser(), 'api')
             ->getJson('/api/teams');
 
-        $response->assertStatus(Response::HTTP_OK)
+        $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
                     '*' => [
@@ -57,7 +56,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->postJson('/api/teams', $attributes);
 
-        $response->assertStatus(Response::HTTP_CREATED)
+        $response->assertCreated()
             ->assertJsonStructure([
                 'id', 'full_name', 'email', 'phone_number',
                 'company', 'address', 'about', 'created_at'
@@ -73,7 +72,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->getJson('/api/teams/-1');
 
-        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $response->assertNotFound();
     }
 
     /** @test */
@@ -84,7 +83,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->getJson('/api/teams/'.$team->id);
 
-        $response->assertStatus(Response::HTTP_OK);
+        $response->assertOk();
     }
 
     /** @test */
@@ -93,7 +92,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->patchJson('/api/teams/-1');
 
-        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $response->assertNotFound();
     }
 
     /** @test */
@@ -114,7 +113,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->patchJson('/api/teams/'.$team->id, $attributes);
 
-        $response->assertStatus(Response::HTTP_OK)
+        $response->assertOk()
             ->assertJsonStructure([
                 'id', 'full_name', 'email', 'phone_number',
                 'company', 'address', 'about', 'created_at'
@@ -129,7 +128,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->deleteJson('/api/teams/-1');
 
-        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $response->assertNotFound();
     }
 
     /** @test */
@@ -140,7 +139,7 @@ class TeamTest extends TestCase
         $response = $this->actingAs($this->createUser(), 'api')
             ->deleteJson('/api/teams/'. $team->id);
 
-        $response->assertStatus(Response::HTTP_NO_CONTENT)
+        $response->assertNoContent()
             ->assertSee(null);
 
         $this->assertDatabaseMissing('teams', ['id' => $team->id]);
@@ -150,22 +149,21 @@ class TeamTest extends TestCase
     public function unauthorized_user_cannot_access_the_following_endpoints()
     {
         $index = $this->getJson('/api/teams');
-        $index->assertStatus(Response::HTTP_UNAUTHORIZED);
+        $index->assertUnauthorized();
 
         $index = $this->postJson('/api/teams');
-        $index->assertStatus(Response::HTTP_UNAUTHORIZED);
+        $index->assertUnauthorized();
 
         $index = $this->getJson('/api/teams/-1');
-        $index->assertStatus(Response::HTTP_UNAUTHORIZED);
+        $index->assertUnauthorized();
 
         $index = $this->patchJson('/api/teams/-1');
-        $index->assertStatus(Response::HTTP_UNAUTHORIZED);
+        $index->assertUnauthorized();
 
         $index = $this->deleteJson('/api/teams/-1');
-        $index->assertStatus(Response::HTTP_UNAUTHORIZED);
+        $index->assertUnauthorized();
 
     }
-
 
     /**
      * Create Team
